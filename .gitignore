@@ -1,0 +1,7 @@
+# ... other ignores ...
+playarena-backend.exe
+debug
+__debug_bin
+
+# Secrets
+.env
