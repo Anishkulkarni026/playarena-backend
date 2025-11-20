@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/JkD004/playarena-backend/db" // Make sure this path matches your go.mod
+	"github.com/JkD004/playarena-backend/db"
 )
 
 // CreateBooking inserts a new booking into the database
@@ -56,6 +56,7 @@ func IsSlotAvailable(venueID int64, startTime, endTime time.Time) (bool, error) 
 
 // FindBookingsByUserID fetches all bookings for a specific user
 func FindBookingsByUserID(userID int64) ([]Booking, error) {
+	// JOIN venues to get Name and Sport
 	query := `
 		SELECT 
 			b.id, b.user_id, b.venue_id, 
@@ -66,7 +67,7 @@ func FindBookingsByUserID(userID int64) ([]Booking, error) {
 		WHERE b.user_id = ?
 		ORDER BY b.start_time DESC
 	`
-	
+
 	rows, err := db.DB.Query(query, userID)
 	if err != nil {
 		log.Println("Error querying bookings by user ID:", err)
@@ -81,8 +82,8 @@ func FindBookingsByUserID(userID int64) ([]Booking, error) {
 			&booking.ID,
 			&booking.UserID,
 			&booking.VenueID,
-			&booking.VenueName,     // <-- Scan Name
-			&booking.SportCategory, // <-- Scan Sport
+			&booking.VenueName,     
+			&booking.SportCategory, 
 			&booking.StartTime,
 			&booking.EndTime,
 			&booking.TotalPrice,
@@ -102,7 +103,6 @@ func FindBookingsByUserID(userID int64) ([]Booking, error) {
 }
 
 // UpdateBookingStatus updates a booking's status
-// It crucially checks that the booking belongs to the correct user
 func UpdateBookingStatus(bookingID int64, userID int64, newStatus string) error {
 	query := `
 		UPDATE bookings 
@@ -132,7 +132,7 @@ func FindBookingsByVenueID(venueID int64) ([]AdminBookingView, error) {
 	query := `
 		SELECT 
 			b.id, b.venue_id, v.name, v.sport_category, b.user_id, 
-			u.first_name, u.last_name, 
+			u.first_name, u.last_name, COALESCE(u.phone, 'N/A'),
 			b.start_time, b.end_time, b.total_price, b.status
 		FROM bookings b
 		JOIN venues v ON b.venue_id = v.id
@@ -158,6 +158,7 @@ func FindBookingsByVenueID(venueID int64) ([]AdminBookingView, error) {
 			&b.UserID,
 			&b.UserFirstName,
 			&b.UserLastName,
+			&b.UserPhone, 
 			&b.StartTime,
 			&b.EndTime,
 			&b.TotalPrice,
@@ -180,7 +181,7 @@ func FindAllBookings() ([]AdminBookingView, error) {
 	query := `
 		SELECT 
 			b.id, b.venue_id, v.name, v.sport_category, b.user_id, 
-			u.first_name, u.last_name, 
+			u.first_name, u.last_name, COALESCE(u.phone, 'N/A'),
 			b.start_time, b.end_time, b.total_price, b.status
 		FROM bookings b
 		JOIN venues v ON b.venue_id = v.id
@@ -205,6 +206,7 @@ func FindAllBookings() ([]AdminBookingView, error) {
 			&b.UserID,
 			&b.UserFirstName,
 			&b.UserLastName,
+			&b.UserPhone,
 			&b.StartTime,
 			&b.EndTime,
 			&b.TotalPrice,
@@ -214,10 +216,6 @@ func FindAllBookings() ([]AdminBookingView, error) {
 			continue
 		}
 		bookings = append(bookings, b)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 
 	if bookings == nil {
@@ -263,13 +261,13 @@ func GetOwnerPopularTime(ownerID int64, venueID int64) (string, error) {
 		LIMIT 1
 	`
 	
-	var popularHour sql.NullInt64 // Use NullInt64 to handle NULL
+	var popularHour sql.NullInt64
 	var count int
 	
 	err := db.DB.QueryRow(query, ownerID, venueID).Scan(&popularHour, &count)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "--:--", nil // No bookings found
+			return "--:--", nil 
 		}
 		log.Println("Error calculating popular time:", err)
 		return "", err
@@ -338,12 +336,8 @@ func GetPlatformPopularTime() (string, error) {
 	return popularTime.Format("03:04 PM"), nil
 }
 
-
-// GetVenueStatsGrouped calculates total bookings and revenue for all venues
+// GetVenueStatsGrouped calculates total bookings and revenue for all venues (for Admin)
 func GetVenueStatsGrouped() ([]VenueStats, error) {
-	// This query joins venues and bookings, groups by venue,
-	// and calculates stats for 'confirmed' bookings.
-	// It uses LEFT JOIN to include venues with 0 bookings.
 	query := `
 		SELECT 
 			v.id,
@@ -380,19 +374,12 @@ func GetVenueStatsGrouped() ([]VenueStats, error) {
 		}
 		statsList = append(statsList, stats)
 	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
 	
 	if statsList == nil {
 		statsList = make([]VenueStats, 0)
 	}
 	return statsList, nil
 }
-
-
-// booking/booking_repository.go
 
 // GetOwnerVenueStatsGrouped calculates stats per venue for a specific owner
 func GetOwnerVenueStatsGrouped(ownerID int64) ([]VenueStats, error) {
@@ -438,7 +425,6 @@ func GetOwnerVenueStatsGrouped(ownerID int64) ([]VenueStats, error) {
 	return statsList, nil
 }
 
-
 // ConfirmBookingPayment updates status to 'confirmed' after payment
 func ConfirmBookingPayment(bookingID int64) error {
 	query := `UPDATE bookings SET status = 'confirmed' WHERE id = ?`
@@ -449,9 +435,6 @@ func ConfirmBookingPayment(bookingID int64) error {
 	}
 	return nil
 }
-
-
-// booking/booking_repository.go
 
 // FindBookingByID fetches a single booking by its ID
 func FindBookingByID(bookingID int64) (*Booking, error) {
@@ -471,11 +454,9 @@ func FindBookingByID(bookingID int64) (*Booking, error) {
 	return &b, nil
 }
 
-// booking/booking_repository.go
-
+// --- FIX: Simplified Query for GetBookedSlotsForDate ---
 // GetBookedSlotsForDate fetches confirmed bookings for a specific venue and date
 func GetBookedSlotsForDate(venueID int64, dateStr string) ([]BookedSlot, error) {
-	// We check for bookings that start on this specific date
 	query := `
 		SELECT start_time, end_time 
 		FROM bookings 
@@ -494,7 +475,6 @@ func GetBookedSlotsForDate(venueID int64, dateStr string) ([]BookedSlot, error) 
 	var slots []BookedSlot
 	for rows.Next() {
 		var s BookedSlot
-		// Note: Ensure your DB connection string has ?parseTime=true (we added this earlier)
 		if err := rows.Scan(&s.StartTime, &s.EndTime); err != nil {
 			continue
 		}

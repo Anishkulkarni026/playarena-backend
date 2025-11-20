@@ -39,6 +39,7 @@ type AdminBookingView struct {
 	EndTime       time.Time `json:"end_time"`
 	TotalPrice    float64   `json:"total_price"`
 	Status        string    `json:"status"`
+	UserPhone     string    `json:"user_phone"`
 }
 
 // OwnerStats defines the data for the owner's dashboard
