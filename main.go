@@ -12,50 +12,49 @@ import (
 	"github.com/JkD004/playarena-backend/db"
 	"github.com/JkD004/playarena-backend/venue"
 	"github.com/JkD004/playarena-backend/user"
-
 )
 
 func main() {
 
-	// ✅ Load environment variables (.env)
+	// Load .env
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("⚠️  Warning: .env file not found, continuing...")
 	}
 
-	// ✅ Initialize Database
+	// Initialize DB
 	db.InitDB()
 
-	// ✅ Initialize Cloudinary
+	// Initialize Cloudinary
 	cld, err := cloudinary.New()
 	if err != nil {
 		log.Fatalf("❌ Failed to initialize Cloudinary: %v", err)
 	}
 
-	// ✅ Pass Cloudinary into Venue module
 	venue.SetCloudinary(cld)
 	user.SetCloudinary(cld)
 
-	// ✅ Setup Gin Router
+	// Setup Gin Router
 	router := gin.Default()
 
-	// ✅ CORS Configuration (THE FIX)
+	// CORS FIX
 	config := cors.DefaultConfig()
-	
-	// Change 1: Allow ALL origins to stop the 403 errors
 	config.AllowAllOrigins = true 
-	
-	// Change 2: Explicitly allow all the methods we are using
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	
-	// Change 3: Allow headers for file uploads and auth
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
-	
 	router.Use(cors.New(config))
 
-	// ✅ Set up routes
+	// 🟢 ROOT ROUTE (Fix 404)
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "PlayArena Backend is Running 🚀",
+		})
+	})
+
+	// API Routes
 	api.SetupRoutes(router)
 
-	// ✅ Run Server
+	// Start Server
+	log.Println("🚀 Backend running on port 8080...")
 	router.Run(":8080")
 }
