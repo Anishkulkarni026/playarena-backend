@@ -7,6 +7,7 @@ import (
 	"github.com/JkD004/playarena-backend/user"
 	"log"
 	"errors"
+	"github.com/JkD004/playarena-backend/venue"
 	// ... other imports
 )
 
