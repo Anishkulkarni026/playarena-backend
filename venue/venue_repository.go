@@ -108,32 +108,6 @@ func FindVenuesByStatus(status string) ([]Venue, error) {
 
 	return venues, nil
 }
-// GetAllVenues returns ALL venues (no status filter)
-func GetAllVenues() ([]Venue, error) {
-    query := `
-        SELECT id, owner_id, status, name, sport_category, description, 
-               address, price_per_hour, opening_time, closing_time,
-               lunch_start_time, lunch_end_time, created_at
-        FROM venues
-    `
-    rows, err := db.DB.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-
-    venues := make([]Venue, 0)
-
-    for rows.Next() {
-        v, err := scanVenue(rows)
-        if err == nil {
-            venues = append(venues, *v)
-        }
-    }
-
-    return venues, nil
-}
-
 
 // ---------------------------------------------------------------
 // FIND VENUE BY ID (only approved)
