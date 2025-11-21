@@ -66,7 +66,7 @@ func UpdateVenueStatus(venueID int64, newStatus string) error {
 	defer tx.Rollback()
 
 	// 3. Get the Owner's ID from the venue
-	ownerID, err := GetVenueOwner(tx, venueID)
+	ownerID, err := GetVenueOwner(venueID)
 	if err != nil {
 		return err
 	}
