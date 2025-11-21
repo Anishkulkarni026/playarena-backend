@@ -72,7 +72,7 @@ func UpdateVenueStatus(venueID int64, newStatus string) error {
 	}
 
 	// 4. Update the venue status
-	err = UpdateVenueStatusInDB(tx, venueID, newStatus)
+	err = UpdateVenueStatusInDB(venueID, newStatus)
 	if err != nil {
 		return err
 	}
