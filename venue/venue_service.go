@@ -2,13 +2,11 @@
 package venue
 
 import (
-	"github.com/JkD004/playarena-backend/db"           // <-- Import db
-	"github.com/JkD004/playarena-backend/notification" // <-- Import user
+	"github.com/JkD004/playarena-backend/db"
+	"github.com/JkD004/playarena-backend/notification"
 	"github.com/JkD004/playarena-backend/user"
 	"log"
 	"errors"
-	"github.com/JkD004/playarena-backend/venue"
-	// ... other imports
 )
 
 // CreateNewVenue is the business logic for creating a venue.
@@ -27,25 +25,6 @@ func CreateNewVenue(venue *Venue, ownerID int64) error {
 	}
 
 	return nil
-}
-
-// ... We're keeping the old GetAllVenues for now,
-// but you should update it to fetch from the DB later.
-var sampleVenues = []Venue{
-	// --- THIS IS THE FIX ---
-	// Changed 'Location' to 'Address' to match the struct in venue_model.go
-	{ID: 1, Name: "Cantonment Turf", Address: "Belagavi", SportCategory: "Football"},
-	// ---------------------
-}
-
-// GetAllVenues now fetches ONLY approved venues from the database.
-func GetAllVenues() ([]Venue, error) {
-	// Call the new repository function
-	venues, err := FindApprovedVenues()
-	if err != nil {
-		return nil, err // Return the error if fetching fails
-	}
-	return venues, nil
 }
 
 // GetVenuesByStatus is the service-layer function to get venues
@@ -125,9 +104,6 @@ func GetVenuesForOwner(ownerID int64) ([]Venue, error) {
 	return FindVenuesByOwnerID(ownerID)
 }
 
-// venue/venue_service.go
-// ... (keep existing functions)
-
 func AddReview(venueID, userID int64, rating int, comment string) error {
 	// TODO: Check if user has actually booked this venue before reviewing?
 	review := &Review{
@@ -139,10 +115,6 @@ func AddReview(venueID, userID int64, rating int, comment string) error {
 	return CreateReview(review)
 }
 
-// venue/venue_service.go
-
-// venue/venue_service.go
-
 func ModifyVenue(venueID int64, venueData *Venue) error {
 	// TODO: Add validation (e.g. ensure price is positive)
 	venueData.ID = venueID
@@ -152,8 +124,6 @@ func ModifyVenue(venueID int64, venueData *Venue) error {
 func GetVenueReviews(venueID int64) ([]Review, error) {
 	return GetReviewsByVenueID(venueID)
 }
-
-// venue/venue_service.go
 
 func VerifyVenueOwnership(venueID int64, userID int64) error {
 	isOwner, err := IsVenueOwner(venueID, userID)
@@ -165,7 +135,6 @@ func VerifyVenueOwnership(venueID int64, userID int64) error {
 	}
 	return nil
 }
-// venue/venue_service.go
 
 // GetVenueIdFromPhoto service wrapper
 func GetVenueIdFromPhoto(photoID int64) (int64, error) {
